@@ -23,9 +23,7 @@ from dotenv import load_dotenv
 DEFAULT_MODEL = "gpt-5.4-mini"
 DEFAULT_MAX_ITERATIONS = 3
 
-# ANSI escape codes add color to terminal output. They look odd because they
-# are not meant for humans to read directly; most terminals interpret them as
-# "change the next text color" and "reset back to normal".
+
 DEBUG_COLOR_LABEL = "\x1B[33m"
 DEBUG_COLOR = "\033[36m"
 RESET_COLOR = "\033[0m"
