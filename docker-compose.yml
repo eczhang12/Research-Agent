@@ -1,12 +1,20 @@
 services:
+  # `research-agent` is the service name used in commands like:
+  # docker compose run --rm research-agent pytest
   research-agent:
     build:
+      # Build the image from the Dockerfile in this project directory.
       context: .
+    # Load API keys and settings from `.env` into the container.
     env_file:
       - .env
+    # Mount the project folder into /app so Python code edits are visible inside
+    # the container without rebuilding the image.
     volumes:
       - .:/app
     working_dir: /app
+    # These settings make the interactive terminal loop work nicely.
     stdin_open: true
     tty: true
+    # Default command for normal app usage. Test commands can override this.
     command: python main.py

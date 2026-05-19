@@ -1,4 +1,11 @@
+# OpenAI SDK: used for query generation, sufficiency checks, and answers.
 openai>=1.82.0
+
+# Tavily SDK: used for web search.
 tavily-python>=0.7.0
+
+# python-dotenv: reads local .env files into environment variables.
 python-dotenv>=1.0.1
+
+# pytest: runs the automated tests inside Docker.
 pytest>=8.3.0

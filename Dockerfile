@@ -1,6 +1,11 @@
 # syntax=docker/dockerfile:1
 
-# Python runtime for the research-agent service.
+# This file teaches Docker how to build the container image for the app.
+# A container image is like a small, repeatable Linux environment that includes
+# Python and the app dependencies, so your host machine stays clean.
+
+# Python runtime for the research-agent service. The `slim` image is smaller
+# than the full Python image but still beginner-friendly for this project.
 FROM python:3.12-slim
 
 # Keep Python logs readable in Docker and avoid writing .pyc files.
@@ -18,4 +23,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # project directory during development so code edits do not require rebuilds.
 COPY . .
 
+# This is the default command when the container starts. Docker Compose can
+# override it, for example when running `pytest`.
 CMD ["python", "main.py"]

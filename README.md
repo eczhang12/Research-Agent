@@ -27,6 +27,8 @@ Required values:
 OPENAI_API_KEY=your-openai-api-key
 TAVILY_API_KEY=your-tavily-api-key
 OPENAI_MODEL=gpt-5.4-mini
+DEBUG=false
+MAX_ITERATIONS=3
 ```
 
 Build the Docker image:
