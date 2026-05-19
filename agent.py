@@ -11,7 +11,7 @@ from typing import Any, Callable
 
 from openai import OpenAI
 
-from config import ConfigError, Settings, load_settings
+from config import ConfigError, Settings, debug_print, load_settings
 from prompts import ANSWER_PROMPT, QUERY_PROMPT
 from tools import SearchError, search_web
 
@@ -40,14 +40,18 @@ class ResearchAgent:
             raise ValueError("Please provide a research question.")
 
         try:
+            debug_print("Received question", question, self.settings.debug)
             queries = self.generate_search_queries(question)
+            debug_print("Generated search queries", queries, self.settings.debug)
             results = self.collect_search_results(queries)
+            debug_print("Collected unique search result count", len(results), self.settings.debug)
             if not results:
                 return (
                     "I could not find useful search results for that question. "
                     "Try rephrasing it or checking your Tavily API key."
                 )
 
+            debug_print("Synthesizing final answer from search results", enabled=self.settings.debug)
             return self.synthesize_answer(question, results)
         except (ConfigError, SearchError) as exc:
             return f"Research agent error: {exc}"
@@ -58,6 +62,7 @@ class ResearchAgent:
         """Ask OpenAI for 2-3 useful search queries."""
 
         prompt = QUERY_PROMPT.format(question=question)
+        debug_print("Calling OpenAI to generate search queries", enabled=self.settings.debug)
         response = self.openai_client.responses.create(
             model=self.settings.openai_model,
             input=prompt,
@@ -67,6 +72,11 @@ class ResearchAgent:
         queries = self._parse_query_json(text)
 
         if not queries:
+            debug_print(
+                "Query response was not valid JSON; using original question",
+                text,
+                self.settings.debug,
+            )
             queries = [question]
 
         return queries[:3]
@@ -78,13 +88,22 @@ class ResearchAgent:
         results: list[dict[str, Any]] = []
 
         for query in queries:
-            for result in self.search_function(
+            debug_print("Searching Tavily", query, self.settings.debug)
+            search_results = self.search_function(
                 query,
                 api_key=self.settings.tavily_api_key,
                 max_results=5,
-            ):
+            )
+            debug_print(
+                "Tavily result count",
+                {"query": query, "result_count": len(search_results)},
+                self.settings.debug,
+            )
+
+            for result in search_results:
                 url = result["url"]
                 if url in seen_urls:
+                    debug_print("Skipping duplicate source", url, self.settings.debug)
                     continue
                 seen_urls.add(url)
                 results.append(result)
@@ -103,6 +122,7 @@ class ResearchAgent:
             question=question,
             sources=self._format_sources(results),
         )
+        debug_print("Calling OpenAI to synthesize the final answer", enabled=self.settings.debug)
         response = self.openai_client.responses.create(
             model=self.settings.openai_model,
             input=prompt,

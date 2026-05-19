@@ -91,3 +91,42 @@ def test_generate_search_queries_falls_back_to_question_when_json_is_invalid():
     assert agent.generate_search_queries("What is retrieval augmented generation?") == [
         "What is retrieval augmented generation?"
     ]
+
+
+def test_debug_mode_prints_labeled_progress_without_changing_answer(capsys):
+    settings = Settings(
+        openai_api_key="fake-openai-key",
+        tavily_api_key="fake-tavily-key",
+        openai_model="test-model",
+        debug=True,
+    )
+
+    def fake_search(query, api_key, max_results):
+        return [
+            {
+                "title": "Source",
+                "url": "https://example.com",
+                "content": "Useful snippet",
+                "score": 0.8,
+            }
+        ]
+
+    agent = ResearchAgent(
+        settings=settings,
+        openai_client=FakeOpenAIClient(
+            [
+                '["debug search query"]',
+                "Final answer with source: https://example.com",
+            ]
+        ),
+        search_function=fake_search,
+    )
+
+    answer = agent.answer("Debug this question")
+
+    output = capsys.readouterr().out
+    assert answer == "Final answer with source: https://example.com"
+    assert "[debug] Received question" in output
+    assert "Debug this question" in output
+    assert "[debug] Generated search queries" in output
+    assert '"debug search query"' in output
